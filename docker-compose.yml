@@ -1,0 +1,51 @@
+version: "3"
+
+volumes:
+  python_sock:
+  proxy_logs:
+
+services:
+  proxy:
+    restart: unless-stopped
+    image: nginx:1.21-alpine
+    depends_on:
+      - backend
+    volumes:
+      - ./backend/static:/var/www/backend/static
+      - ./docker/proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/proxy/conf.d:/etc/nginx/conf.d:ro
+      - proxy_logs:/var/log/nginx
+      - python_sock:/var/run/python
+
+  backend:
+    restart: unless-stopped
+    image: presale/parser/backend
+    build:
+      context: ./docker/backend
+    depends_on:
+      - db
+      - redis
+      - webdriver
+    volumes:
+      - ./backend:/var/www/backend
+      - python_sock:/var/run/python
+    env_file:
+      - database.env
+      - backend.env
+
+  db:
+    restart: unless-stopped
+    image: mariadb
+    env_file:
+      - database.env
+
+  redis:
+    restart: unless-stopped
+    image: redis:6-alpine
+
+  webdriver:
+    image: selenium/standalone-chrome
+    ports:
+      - '4444:4444'
+    shm_size: '1gb'
+    restart: on-failure
