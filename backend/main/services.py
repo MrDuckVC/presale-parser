@@ -1,5 +1,6 @@
 import re
 
+from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 
@@ -11,7 +12,7 @@ def get_users():
 
 
 def send_message(message, to):
-    send_mail("New interesting tender for Deeplace", message, "tenderfordeeplacebot@gmail.com", [to], fail_silently=False)
+    send_mail("New interesting tender", message, settings.EMAIL_HOST_USER, [to], fail_silently=False)
 
 
 def get_key_words(user):
